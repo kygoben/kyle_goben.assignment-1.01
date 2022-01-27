@@ -1,0 +1,5 @@
+jan 27
+    created terrain.c
+    finished mapPrint function
+    created a terrain initalizer
+    started coding some of the random generation of terrain "seeds"
