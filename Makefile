@@ -5,4 +5,4 @@ terrain: terrain.c
 	
 
 clean:
-	$(RM) *.o terrain
+	$(RM) terrain

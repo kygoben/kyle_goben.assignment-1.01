@@ -4,6 +4,8 @@
 #include <string.h>
 #define R 21
 #define C 80
+#define tR 8
+#define tC 16
 
 enum terrain_type
 {
@@ -28,7 +30,6 @@ int check(int r, int c)
 {
     if (r < R && r > 0 && c < C && c > 0)
     {
-
         return 1;
     }
     return 0;
@@ -65,7 +66,7 @@ void mapPrint(int map[R][C])
                 printf(":");
                 break;
             case ROCKS:
-                printf("?"); //check piazza
+                printf("%%"); //check piazza
                 break;
             case TREES:
                 printf("^");
@@ -111,7 +112,6 @@ int setBorders(int map[R][C])
 
 int exits(int map[R][C])
 {
-
     int topExit = rand() % C;
     map[0][topExit] = PATH;
     int bottomExit = rand() % C;
@@ -124,32 +124,79 @@ int exits(int map[R][C])
 
     return 0;
 }
-
-int tallGrass(int map[R][C])
+int intersect(int map[R][C], int r, int c)
 {
-    int r = rand() % 21;
-    int c = rand() % 80;
+    if (map[r][c] != NOT_SET)
+        return 1;
+    return 0;
+}
 
-    for (int i = r - 5; i < r + 5; i++)
+int placeBubble(int map[R][C], int t)
+{
+    int r, c;
+
+    do
     {
-        for (int j = c - 9; j < c + 9; j++)
+        r = rand() % 21;
+        c = rand() % 80;
+    } while (intersect(map, r, c));
+
+    for (int i = r - tR; i < r + tR; i++)
+    {
+        for (int j = c - tC; j < c + tC; j++)
         {
             if (check(i, j))
-                map[i][j] = TALL_GRASS;
+                map[i][j] = t;
         }
     }
-
-    r = rand() % 21;
-    c = rand() % 80;
-
-    for (int i = r - 5; i < r + 5; i++)
+    return 0;
+}
+int fill(int map[R][C])
+{
+    for (int i = 0; i < R; i++)
     {
-        for (int j = c - 9; j < c + 9; j++)
+        for (int j = 0; j < C; j++)
         {
-            if (check(i, j))
-                map[i][j] = TALL_GRASS;
+            if (!intersect(map, i, j))
+                map[i][j] = CLEARING;
         }
     }
+    return 0;
+}
+
+int rocks(int map[R][C]){
+    int r,c;
+    for(int i = 0; i<25;i++){
+        r = rand() % 21;
+        c = rand() % 80;
+        map[r][c] = ROCKS;
+    }
+    return 0;
+}
+
+int tGen(int map[R][C])
+{
+    placeBubble(map, TALL_GRASS);
+    placeBubble(map, TALL_GRASS);
+    placeBubble(map, CLEARING);
+    placeBubble(map, CLEARING);
+    placeBubble(map, TREES);
+    placeBubble(map, TREES);
+    fill(map);
+
+    rocks(map);
+
+    // placeBubble(map, TALL_GRASS);
+    // placeBubble(map, TALL_GRASS);
+    // placeBubble(map, CLEARING);
+    // placeBubble(map, CLEARING);
+    // placeBubble(map, TREES);
+
+    // placeBubble(map, TALL_GRASS);
+    // placeBubble(map, TALL_GRASS);
+    // placeBubble(map, CLEARING);
+    // placeBubble(map, CLEARING);
+    // placeBubble(map, TREES);
 
     return 0;
 }
@@ -161,7 +208,7 @@ int main(int argc, char const *argv[])
 
     initializeMap(map);
 
-    tallGrass(map);
+    tGen(map);
 
     setBorders(map);
 
