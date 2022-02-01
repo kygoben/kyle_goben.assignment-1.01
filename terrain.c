@@ -50,7 +50,7 @@ void mapPrint(int map[21][80])
                 printf("%%");
                 break;
             case CLEARING:
-                printf(".");
+                printf(":");
                 break;
             case ROCKS:
                 printf("?"); //check piazza
@@ -72,14 +72,39 @@ int main(int argc, char const *argv[])
     {
         for (int j = 0; j < 80; j++)
         {
-            map[i][j] = -1;
+            map[i][j] = NOT_SET;
+        }
+    }
+
+    for (int i = 0; i < 21; i += 20)
+    {
+        for (int j = 0; j < 80; j++)
+        {
+            map[i][j] = BOULDERS;
+        }
+    }
+
+    for (int i = 0; i < 21; i++)
+    {
+        for (int j = 0; j < 80; j += 79)
+        {
+            map[i][j] = BOULDERS;
         }
     }
 
     srand(time(NULL));
 
-    int vert = rand() % 21;
-    int hors = rand() % 80;
+    int topExit = rand() % 80;
+    map[0][topExit] = PATH;
+    int bottomExit = rand() % 80;
+    map[20][bottomExit] = PATH;
+
+    int leftExit = rand() % 20;
+    map[leftExit][0] = PATH;
+    int rightExit = rand() % 20;
+    map[rightExit][79] = PATH;
+
+    
 
     mapPrint(map);
 

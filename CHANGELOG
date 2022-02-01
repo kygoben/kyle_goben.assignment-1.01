@@ -1,5 +1,11 @@
-jan 27
+jan 27, 2022
     created terrain.c
     finished mapPrint function
     created a terrain initalizer
     started coding some of the random generation of terrain "seeds"
+jan 28, 2022
+    created random generation for entrances and exits
+jan 30, 2022
+    made the generation of borders with immoveable boulders
+feb 1, 2022
+    
