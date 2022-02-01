@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#define R 21
+#define C 80
 
 enum terrain_type
 {
@@ -22,11 +24,21 @@ struct room
     int size;
 };
 
-void mapPrint(int map[21][80])
+int check(int r, int c)
 {
-    for (int i = 0; i < 21; i++)
+    if (r < R && r > 0 && c < C && c > 0)
     {
-        for (int j = 0; j < 80; j++)
+
+        return 1;
+    }
+    return 0;
+}
+
+void mapPrint(int map[R][C])
+{
+    for (int i = 0; i < R; i++)
+    {
+        for (int j = 0; j < C; j++)
         {
             switch ((map[i][j]))
             {
@@ -56,55 +68,104 @@ void mapPrint(int map[21][80])
                 printf("?"); //check piazza
                 break;
             case TREES:
-                printf("\"");
+                printf("^");
                 break;
             }
         }
         printf("\n");
     }
 }
-
-int main(int argc, char const *argv[])
+int initializeMap(int map[R][C])
 {
-    int map[21][80];
 
-    for (int i = 0; i < 21; i++)
+    for (int i = 0; i < R; i++)
     {
-        for (int j = 0; j < 80; j++)
+        for (int j = 0; j < C; j++)
         {
             map[i][j] = NOT_SET;
         }
     }
+    return 0;
+}
 
-    for (int i = 0; i < 21; i += 20)
+int setBorders(int map[R][C])
+{
+
+    for (int i = 0; i < R; i += R - 1)
     {
-        for (int j = 0; j < 80; j++)
+        for (int j = 0; j < C; j++)
         {
             map[i][j] = BOULDERS;
         }
     }
 
-    for (int i = 0; i < 21; i++)
+    for (int i = 0; i < R; i++)
     {
-        for (int j = 0; j < 80; j += 79)
+        for (int j = 0; j < C; j += 79)
         {
             map[i][j] = BOULDERS;
         }
     }
+    return 0;
+}
 
+int exits(int map[R][C])
+{
+
+    int topExit = rand() % C;
+    map[0][topExit] = PATH;
+    int bottomExit = rand() % C;
+    map[R - 1][bottomExit] = PATH;
+
+    int leftExit = rand() % R;
+    map[leftExit][0] = PATH;
+    int rightExit = rand() % R;
+    map[rightExit][C - 1] = PATH;
+
+    return 0;
+}
+
+int tallGrass(int map[R][C])
+{
+    int r = rand() % 21;
+    int c = rand() % 80;
+
+    for (int i = r - 5; i < r + 5; i++)
+    {
+        for (int j = c - 9; j < c + 9; j++)
+        {
+            if (check(i, j))
+                map[i][j] = TALL_GRASS;
+        }
+    }
+
+    r = rand() % 21;
+    c = rand() % 80;
+
+    for (int i = r - 5; i < r + 5; i++)
+    {
+        for (int j = c - 9; j < c + 9; j++)
+        {
+            if (check(i, j))
+                map[i][j] = TALL_GRASS;
+        }
+    }
+
+    return 0;
+}
+
+int main(int argc, char const *argv[])
+{
+    int map[R][C];
     srand(time(NULL));
 
-    int topExit = rand() % 80;
-    map[0][topExit] = PATH;
-    int bottomExit = rand() % 80;
-    map[20][bottomExit] = PATH;
+    initializeMap(map);
 
-    int leftExit = rand() % 20;
-    map[leftExit][0] = PATH;
-    int rightExit = rand() % 20;
-    map[rightExit][79] = PATH;
+    tallGrass(map);
 
-    
+    setBorders(map);
+
+    exits(map); //need to change so that the corner is not an option
 
     mapPrint(map);
 
