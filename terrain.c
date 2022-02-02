@@ -66,7 +66,7 @@ void mapPrint(int map[R][C])
                 printf(":");
                 break;
             case ROCKS:
-                printf("%%"); //check piazza
+                printf("%%"); // check piazza
                 break;
             case TREES:
                 printf("^");
@@ -110,17 +110,17 @@ int setBorders(int map[R][C])
     return 0;
 }
 
-int exits(int map[R][C])
+int exits(int map[R][C], int *topExit, int *bottomExit, int *leftExit, int *rightExit)
 {
-    int topExit = rand() % C;
-    map[0][topExit] = PATH;
-    int bottomExit = rand() % C;
-    map[R - 1][bottomExit] = PATH;
+    *topExit = 1 + rand() % (C - 2);
+    map[0][*topExit] = PATH;
+    *bottomExit = 1 + rand() % (C - 2);
+    map[R - 1][*bottomExit] = PATH;
 
-    int leftExit = rand() % R;
-    map[leftExit][0] = PATH;
-    int rightExit = rand() % R;
-    map[rightExit][C - 1] = PATH;
+    *leftExit = 1 + rand() % (R - 2);
+    map[*leftExit][0] = PATH;
+    *rightExit = 1 + rand() % (R - 2);
+    map[*rightExit][C - 1] = PATH;
 
     return 0;
 }
@@ -131,7 +131,7 @@ int intersect(int map[R][C], int r, int c)
     return 0;
 }
 
-int placeBubble(int map[R][C], int t)
+int placeBubble(int map[R][C], int t, int tr, int tc)
 {
     int r, c;
 
@@ -141,9 +141,9 @@ int placeBubble(int map[R][C], int t)
         c = rand() % 80;
     } while (intersect(map, r, c));
 
-    for (int i = r - tR; i < r + tR; i++)
+    for (int i = r - tr; i < r + tr; i++)
     {
-        for (int j = c - tC; j < c + tC; j++)
+        for (int j = c - tc; j < c + tc; j++)
         {
             if (check(i, j))
                 map[i][j] = t;
@@ -164,45 +164,98 @@ int fill(int map[R][C])
     return 0;
 }
 
-int rocks(int map[R][C]){
-    int r,c;
-    for(int i = 0; i<25;i++){
+int rocks(int map[R][C], int t)
+{
+    int r, c;
+    for (int i = 0; i < 25; i++)
+    {
         r = rand() % 21;
         c = rand() % 80;
-        map[r][c] = ROCKS;
+        map[r][c] = t;
     }
     return 0;
 }
 
 int tGen(int map[R][C])
 {
-    placeBubble(map, TALL_GRASS);
-    placeBubble(map, TALL_GRASS);
-    placeBubble(map, CLEARING);
-    placeBubble(map, CLEARING);
-    placeBubble(map, TREES);
-    placeBubble(map, TREES);
+    placeBubble(map, CLEARING, tR, tC);
+    placeBubble(map, CLEARING, tR, tC);
+    placeBubble(map, TALL_GRASS, tR, tC);
+    placeBubble(map, TALL_GRASS, tR, tC);
+
+    placeBubble(map, TREES, tR / 2, tC / 2);
+    placeBubble(map, TREES, tR / 2, tC / 2);
     fill(map);
-
-    rocks(map);
-
-    // placeBubble(map, TALL_GRASS);
-    // placeBubble(map, TALL_GRASS);
-    // placeBubble(map, CLEARING);
-    // placeBubble(map, CLEARING);
-    // placeBubble(map, TREES);
-
-    // placeBubble(map, TALL_GRASS);
-    // placeBubble(map, TALL_GRASS);
-    // placeBubble(map, CLEARING);
-    // placeBubble(map, CLEARING);
-    // placeBubble(map, TREES);
+    rocks(map, ROCKS);
+    rocks(map, TREES);
 
     return 0;
 }
+int min(int *a, int *b)
+{
+    if (*a < *b)
+        return 1;
+    return 0;
+}
+int paths(int map[R][C], int *t, int *b, int *l, int *ro)
+{
+    int r;
+    r = 1 + rand() % (R - 2);
 
+    for (int i = 0; i < r; i++)
+    {
+        map[i][*t] = PATH;
+    }
+    if (*t < *b)
+    {
+        for (int i = *t; i < *b; i++)
+            map[r][i] = PATH;
+    }
+
+    if (*t > *b)
+    {
+        for (int i = *t; i > *b; i--)
+            map[r][i] = PATH;
+    }
+
+    for (int i = R - 1; i >= r; i--)
+    {
+        map[i][*b] = PATH;
+    }
+
+    int c;
+    c = 1 + rand() % (C - 2);
+
+    for (int i = 0; i < c; i++)
+    {
+        map[*l][i] = PATH;
+    }
+
+    if (*l < *ro)
+    {
+        for (int i = *l; i < *ro; i++)
+            map[i][c] = PATH;
+    }
+
+    if (*l > *ro)
+    {
+        for (int i = *l; i > *ro; i--)
+            map[i][c] = PATH;
+    }
+
+    for (int i = C - 1; i >= c; i--)
+    {
+        map[*ro][i] = PATH;
+    }
+
+    return 0;
+}
 int main(int argc, char const *argv[])
 {
+
+    int c, d;
+    int t = 0, b = 0, l = 0, r = 0;
+
     int map[R][C];
     srand(time(NULL));
 
@@ -212,7 +265,9 @@ int main(int argc, char const *argv[])
 
     setBorders(map);
 
-    exits(map); //need to change so that the corner is not an option
+    exits(map, &t, &b, &l, &r); // need to change so that the corner is not an option
+
+    paths(map, &t, &b, &l, &r);
 
     mapPrint(map);
 
