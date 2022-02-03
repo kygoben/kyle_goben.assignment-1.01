@@ -20,12 +20,6 @@ enum terrain_type
     TREES = 8,
 };
 
-struct room
-{
-    int position;
-    int size;
-};
-
 int check(int r, int c)
 {
     if (r < R && r > 0 && c < C && c > 0)
@@ -91,7 +85,6 @@ int initializeMap(int map[R][C])
 
 int setBorders(int map[R][C])
 {
-
     for (int i = 0; i < R; i += R - 1)
     {
         for (int j = 0; j < C; j++)
@@ -99,7 +92,6 @@ int setBorders(int map[R][C])
             map[i][j] = BOULDERS;
         }
     }
-
     for (int i = 0; i < R; i++)
     {
         for (int j = 0; j < C; j += 79)
@@ -134,7 +126,6 @@ int intersect(int map[R][C], int r, int c)
 int placeBubble(int map[R][C], int t, int tr, int tc)
 {
     int r, c;
-
     do
     {
         r = rand() % 21;
@@ -209,13 +200,17 @@ int paths(int map[R][C], int *t, int *b, int *l, int *ro)
     if (*t < *b)
     {
         for (int i = *t; i < *b; i++)
+        {
             map[r][i] = PATH;
+        }
     }
 
     if (*t > *b)
     {
         for (int i = *t; i > *b; i--)
+        {
             map[r][i] = PATH;
+        }
     }
 
     for (int i = R - 1; i >= r; i--)
@@ -234,13 +229,17 @@ int paths(int map[R][C], int *t, int *b, int *l, int *ro)
     if (*l < *ro)
     {
         for (int i = *l; i < *ro; i++)
+        {
             map[i][c] = PATH;
+        }
     }
 
     if (*l > *ro)
     {
         for (int i = *l; i > *ro; i--)
+        {
             map[i][c] = PATH;
+        }
     }
 
     for (int i = C - 1; i >= c; i--)
@@ -250,10 +249,101 @@ int paths(int map[R][C], int *t, int *b, int *l, int *ro)
 
     return 0;
 }
+int ifPath(int map[R][C], int r, int c)
+{
+    if (map[r][c] == PATH || map[r][c] == MART || map[r][c] == CENTER)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+int closestPath(int map[R][C], int r, int c, int *row)
+{
+    for (int i = r; i < R; i++)
+    {
+        if (map[i][c] == PATH)
+        {
+            *row = i;
+            break;
+        }
+    }
+    for (int i = r; i > 0; i--)
+    {
+        if (map[i][c] == PATH)
+        {
+            *row = i;
+            break;
+        }
+    }
+    return 0;
+}
+
+int stations(int map[R][C], int *t, int *b, int *l, int *ro, int type)
+{
+    int c, r;
+    do
+    {
+        r = 1 + rand() % (R - 3);
+        c = 1 + rand() % (C - 3);
+    } while (ifPath(map, r, c));
+
+    map[r][c] = type;
+    if (ifPath(map, r, c + 1))
+    {
+        map[r][c - 1] = type;
+        if (ifPath(map, r + 1, c))
+        {
+            map[r - 1][c - 1] = type;
+            map[r - 1][c] = type;
+        }
+        else
+        {
+            map[r + 1][c - 1] = type;
+            map[r + 1][c] = type;
+        }
+    }
+    else
+    {
+        map[r][c + 1] = type;
+
+        if (ifPath(map, r + 1, c))
+        {
+            map[r - 1][c + 1] = type;
+            map[r - 1][c] = type;
+        }
+        else
+        {
+            map[r + 1][c + 1] = type;
+            map[r + 1][c] = type;
+        }
+    }
+
+    int row;
+    closestPath(map, r, c, &row);
+    if (row < r)
+    {
+        for (int i = r; i > row; i--)
+        {
+            if (!ifPath(map, i, c))
+                map[i][c] = PATH;
+        }
+    }
+    if (row > r)
+    {
+        for (int i = r; i < row; i++)
+        {
+            if (!ifPath(map, i, c))
+                map[i][c] = PATH;
+        }
+    }
+
+    return 0;
+}
+
 int main(int argc, char const *argv[])
 {
 
-    int c, d;
     int t = 0, b = 0, l = 0, r = 0;
 
     int map[R][C];
@@ -265,9 +355,13 @@ int main(int argc, char const *argv[])
 
     setBorders(map);
 
-    exits(map, &t, &b, &l, &r); // need to change so that the corner is not an option
+    exits(map, &t, &b, &l, &r);
 
     paths(map, &t, &b, &l, &r);
+
+    stations(map, &t, &b, &l, &r, MART);
+
+    stations(map, &t, &b, &l, &r, CENTER);
 
     mapPrint(map);
 
