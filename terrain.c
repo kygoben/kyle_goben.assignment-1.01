@@ -2,11 +2,22 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#define R 21
+#define R 21 // size of field
 #define C 80
-#define tR 8
+#define tR 8 // how much to grow out from "seed" terrain
 #define tC 16
+int max(int num1, int num2)
+{
+    return (num1 > num2) ? num1 : num2;
+}
 
+/**
+ * Find minimum between two numbers.
+ */
+int min(int num1, int num2)
+{
+    return (num1 > num2) ? num2 : num1;
+}
 enum terrain_type
 {
     NOT_SET = -1,
@@ -19,8 +30,10 @@ enum terrain_type
     ROCKS = 7,
     TREES = 8,
 };
-
-int check(int r, int c)
+/*
+Checks to see if the coord is in the map
+*/
+int inBounds(int r, int c)
 {
     if (r < R && r > 0 && c < C && c > 0)
     {
@@ -28,7 +41,9 @@ int check(int r, int c)
     }
     return 0;
 }
-
+/*
+Prints the map
+*/
 void mapPrint(int map[R][C])
 {
     for (int i = 0; i < R; i++)
@@ -60,7 +75,7 @@ void mapPrint(int map[R][C])
                 printf(":");
                 break;
             case ROCKS:
-                printf("%%"); // check piazza
+                printf("%%");
                 break;
             case TREES:
                 printf("^");
@@ -70,9 +85,11 @@ void mapPrint(int map[R][C])
         printf("\n");
     }
 }
-int initializeMap(int map[R][C])
+/*
+Sets the entire map to NOT_SET values
+*/
+int mapNotSet(int map[R][C])
 {
-
     for (int i = 0; i < R; i++)
     {
         for (int j = 0; j < C; j++)
@@ -82,7 +99,9 @@ int initializeMap(int map[R][C])
     }
     return 0;
 }
-
+/*
+Sets the borders to boulders
+*/
 int setBorders(int map[R][C])
 {
     for (int i = 0; i < R; i += R - 1)
@@ -101,7 +120,10 @@ int setBorders(int map[R][C])
     }
     return 0;
 }
-
+/*
+Randomizes exits on each side of the map
+Does not allow exits on corners
+*/
 int exits(int map[R][C], int *topExit, int *bottomExit, int *leftExit, int *rightExit)
 {
     *topExit = 1 + rand() % (C - 2);
@@ -116,13 +138,19 @@ int exits(int map[R][C], int *topExit, int *bottomExit, int *leftExit, int *righ
 
     return 0;
 }
-int intersect(int map[R][C], int r, int c)
+/*
+Checks to see if the location has already been set.
+Returns 1 if it is occupied
+*/
+int unset(int map[R][C], int r, int c)
 {
     if (map[r][c] != NOT_SET)
         return 1;
     return 0;
 }
-
+/*
+Randomly picks a unset location and makes a bubble of the given terrian
+*/
 int placeBubble(int map[R][C], int t, int tr, int tc)
 {
     int r, c;
@@ -130,32 +158,37 @@ int placeBubble(int map[R][C], int t, int tr, int tc)
     {
         r = rand() % 21;
         c = rand() % 80;
-    } while (intersect(map, r, c));
+    } while (unset(map, r, c));
 
     for (int i = r - tr; i < r + tr; i++)
     {
         for (int j = c - tc; j < c + tc; j++)
         {
-            if (check(i, j))
+            if (inBounds(i, j))
                 map[i][j] = t;
         }
     }
     return 0;
 }
+/*
+fills the remaining space of the map with clearing
+*/
 int fill(int map[R][C])
 {
     for (int i = 0; i < R; i++)
     {
         for (int j = 0; j < C; j++)
         {
-            if (!intersect(map, i, j))
+            if (!unset(map, i, j))
                 map[i][j] = CLEARING;
         }
     }
     return 0;
 }
-
-int rocks(int map[R][C], int t)
+/*
+places any terrian type randomly around the map
+*/
+int scatter(int map[R][C], int t)
 {
     int r, c;
     for (int i = 0; i < 25; i++)
@@ -166,7 +199,9 @@ int rocks(int map[R][C], int t)
     }
     return 0;
 }
-
+/*
+generates all of the terrain for the map
+*/
 int tGen(int map[R][C])
 {
     placeBubble(map, CLEARING, tR, tC);
@@ -177,17 +212,25 @@ int tGen(int map[R][C])
     placeBubble(map, TREES, tR / 2, tC / 2);
     placeBubble(map, TREES, tR / 2, tC / 2);
     fill(map);
-    rocks(map, ROCKS);
-    rocks(map, TREES);
+    scatter(map, ROCKS);
+    scatter(map, TREES);
 
     return 0;
 }
+/*
+returns 1 if a is smaller
+*/
 int min(int *a, int *b)
 {
     if (*a < *b)
         return 1;
     return 0;
 }
+/*
+places NS and EW maps
+Randomly picks a row or column between the points, this is the
+line that they connect on
+*/
 int paths(int map[R][C], int *t, int *b, int *l, int *ro)
 {
     int r;
@@ -249,15 +292,23 @@ int paths(int map[R][C], int *t, int *b, int *l, int *ro)
 
     return 0;
 }
-int ifPath(int map[R][C], int r, int c)
+/*
+Checks to see if the space is ocupied with an important structure
+*/
+int importantStructure(int map[R][C], int r, int c)
 {
-    if (map[r][c] == PATH || map[r][c] == MART || map[r][c] == CENTER)
-    {
-        return 1;
-    }
+    if (inBounds(r, c))
+        if (map[r][c] == PATH || map[r][c] == MART || map[r][c] == CENTER)
+        {
+
+            return 1;
+        }
     return 0;
 }
 
+/*
+Finds the closest south path, if none exists it takes the closest north path
+*/
 int closestPath(int map[R][C], int r, int c, int *row)
 {
     for (int i = r; i < R; i++)
@@ -276,9 +327,27 @@ int closestPath(int map[R][C], int r, int c, int *row)
             break;
         }
     }
+
+    return 0;
+}
+/*
+tests if there is a 4 block empty region, from paths, marts, centers
+down and to the right
+*/
+int stationTester(int map[R][C], int r, int c)
+{
+    if (importantStructure(map, r, c) || importantStructure(map, r, c + 1) || importantStructure(map, r + 1, c) || importantStructure(map, r + 1, c + 1))
+    {
+        return 1;
+    }
+
     return 0;
 }
 
+/*
+places stations in groups of 4 around the map in unocupied space
+places a N or S path from the station to the path
+*/
 int stations(int map[R][C], int *t, int *b, int *l, int *ro, int type)
 {
     int c, r;
@@ -286,38 +355,12 @@ int stations(int map[R][C], int *t, int *b, int *l, int *ro, int type)
     {
         r = 1 + rand() % (R - 3);
         c = 1 + rand() % (C - 3);
-    } while (ifPath(map, r, c));
+    } while (stationTester(map, r, c));
 
     map[r][c] = type;
-    if (ifPath(map, r, c + 1))
-    {
-        map[r][c - 1] = type;
-        if (ifPath(map, r + 1, c))
-        {
-            map[r - 1][c - 1] = type;
-            map[r - 1][c] = type;
-        }
-        else
-        {
-            map[r + 1][c - 1] = type;
-            map[r + 1][c] = type;
-        }
-    }
-    else
-    {
-        map[r][c + 1] = type;
-
-        if (ifPath(map, r + 1, c))
-        {
-            map[r - 1][c + 1] = type;
-            map[r - 1][c] = type;
-        }
-        else
-        {
-            map[r + 1][c + 1] = type;
-            map[r + 1][c] = type;
-        }
-    }
+    map[r][c + 1] = type;
+    map[r + 1][c] = type;
+    map[r + 1][c + 1] = type;
 
     int row;
     closestPath(map, r, c, &row);
@@ -325,7 +368,7 @@ int stations(int map[R][C], int *t, int *b, int *l, int *ro, int type)
     {
         for (int i = r; i > row; i--)
         {
-            if (!ifPath(map, i, c))
+            if (!importantStructure(map, i, c))
                 map[i][c] = PATH;
         }
     }
@@ -333,14 +376,16 @@ int stations(int map[R][C], int *t, int *b, int *l, int *ro, int type)
     {
         for (int i = r; i < row; i++)
         {
-            if (!ifPath(map, i, c))
+            if (!importantStructure(map, i, c))
                 map[i][c] = PATH;
         }
     }
 
     return 0;
 }
-
+/*
+builds the map
+*/
 int main(int argc, char const *argv[])
 {
 
@@ -349,7 +394,7 @@ int main(int argc, char const *argv[])
     int map[R][C];
     srand(time(NULL));
 
-    initializeMap(map);
+    mapNotSet(map);
 
     tGen(map);
 

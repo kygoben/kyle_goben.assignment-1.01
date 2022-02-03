@@ -1,0 +1,5 @@
+This program takes 8 different types (path, boulder,clearing, 
+tall grass, center,mart,trees,rocks) and makes a pokemon style map
+out of them. The area is 80x21 with a mart and a center that are
+reachable from the path. There is a path that runs from the top to bottom
+and left and right. The borders are sorounded with boulders.
