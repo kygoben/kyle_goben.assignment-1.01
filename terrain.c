@@ -217,15 +217,7 @@ int tGen(int map[R][C])
 
     return 0;
 }
-/*
-returns 1 if a is smaller
-*/
-int min(int *a, int *b)
-{
-    if (*a < *b)
-        return 1;
-    return 0;
-}
+
 /*
 places NS and EW maps
 Randomly picks a row or column between the points, this is the
@@ -240,20 +232,10 @@ int paths(int map[R][C], int *t, int *b, int *l, int *ro)
     {
         map[i][*t] = PATH;
     }
-    if (*t < *b)
-    {
-        for (int i = *t; i < *b; i++)
-        {
-            map[r][i] = PATH;
-        }
-    }
 
-    if (*t > *b)
+    for (int i = min(*t, *b); i <= max(*t, *b); i++)
     {
-        for (int i = *t; i > *b; i--)
-        {
-            map[r][i] = PATH;
-        }
+        map[r][i] = PATH;
     }
 
     for (int i = R - 1; i >= r; i--)
@@ -269,20 +251,9 @@ int paths(int map[R][C], int *t, int *b, int *l, int *ro)
         map[*l][i] = PATH;
     }
 
-    if (*l < *ro)
+    for (int i = min(*l, *ro); i <= max(*l, *ro); i++)
     {
-        for (int i = *l; i < *ro; i++)
-        {
-            map[i][c] = PATH;
-        }
-    }
-
-    if (*l > *ro)
-    {
-        for (int i = *l; i > *ro; i--)
-        {
-            map[i][c] = PATH;
-        }
+        map[i][c] = PATH;
     }
 
     for (int i = C - 1; i >= c; i--)
